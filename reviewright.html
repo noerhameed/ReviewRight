@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReviewRight — Performance Reviews Done Right</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #2d5a3d;
+    --green-light: #f0f5f1;
+    --green-border: #c4d6c8;
+    --green-mid: #4a7c5f;
+    --charcoal: #1a2e1f;
+    --muted: #6b7c6e;
+    --bg: #f7f7f4;
+    --card: #ffffff;
+    --card-border: #dde3da;
+    --warning-bg: #fffbf0;
+    --warning-border: #e8d9a0;
+    --error: #b94040;
+    --amber: #92400e;
+    --amber-bg: #fffbeb;
+    --amber-border: #fcd34d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--charcoal); min-height: 100vh; }
+
+  /* HEADER */
+  header { background: var(--card); border-bottom: 1px solid var(--card-border); padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .logo { display: flex; align-items: center; gap: 10px; font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--green); cursor: pointer; }
+  .logo-icon { width: 32px; height: 32px; background: var(--green); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .review-count { font-size: 13px; color: var(--muted); background: var(--green-light); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--green-border); }
+  .btn-outline { padding: 7px 16px; border: 1px solid var(--green-border); border-radius: 8px; background: white; color: var(--green); font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  .btn-outline:hover { background: var(--green-light); }
+  .btn-primary { padding: 8px 20px; background: var(--green); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.2s; }
+  .btn-primary:hover { background: var(--green-mid); }
+  .btn-primary:disabled { background: var(--muted); cursor: not-allowed; }
+
+  /* API KEY BANNER */
+  #apiKeyBanner { background: var(--warning-bg); border-bottom: 1px solid var(--warning-border); padding: 10px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  #apiKeyBanner input { flex: 1; padding: 8px 12px; border: 1px solid var(--warning-border); border-radius: 8px; font-size: 13px; font-family: 'DM Sans', sans-serif; background: white; max-width: 400px; }
+  #apiKeyBanner .banner-text { font-size: 13px; color: var(--amber); font-weight: 500; }
+  #apiKeyBanner .btn-save { padding: 7px 16px; background: var(--amber); color: white; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
+
+  /* LANDING */
+  #landing { display: block; }
+  .hero { max-width: 800px; margin: 0 auto; padding: 80px 24px 60px; text-align: center; }
+  .trust-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--green-light); border: 1px solid var(--green-border); border-radius: 20px; padding: 6px 16px; font-size: 13px; color: var(--green); margin-bottom: 32px; }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(36px, 6vw, 60px); font-weight: 700; line-height: 1.15; color: var(--charcoal); margin-bottom: 20px; }
+  .hero h1 span { color: var(--green); }
+  .hero p { font-size: 18px; color: var(--muted); line-height: 1.6; max-width: 560px; margin: 0 auto 36px; }
+  .hero-cta { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .btn-hero { padding: 16px 40px; background: var(--green); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; box-shadow: 0 4px 12px rgba(45,90,61,0.3); }
+  .btn-hero:hover { background: var(--green-mid); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(45,90,61,0.35); }
+  .hero-note { font-size: 13px; color: var(--muted); }
+
+  /* OBJECTION BLOCK */
+  .objection { max-width: 800px; margin: 0 auto; padding: 0 24px 60px; }
+  .objection-card { background: var(--charcoal); color: white; border-radius: 16px; padding: 32px 36px; }
+  .objection-card h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #9ca3af; margin-bottom: 16px; }
+  .objection-card p { font-size: 16px; line-height: 1.7; color: #e5e7eb; }
+
+  /* FEATURES */
+  .features { max-width: 900px; margin: 0 auto; padding: 0 24px 60px; }
+  .features h2 { font-family: 'Playfair Display', serif; font-size: 32px; text-align: center; margin-bottom: 36px; color: var(--charcoal); }
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+  .feature-card { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 28px; }
+  .feature-icon { font-size: 28px; margin-bottom: 14px; }
+  .feature-card h4 { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--charcoal); }
+  .feature-card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+  /* PRICING */
+  .pricing { max-width: 700px; margin: 0 auto; padding: 0 24px 80px; }
+  .pricing h2 { font-family: 'Playfair Display', serif; font-size: 32px; text-align: center; margin-bottom: 36px; }
+  .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .pricing-card { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 28px; }
+  .pricing-card.featured { border-color: var(--green); border-width: 2px; }
+  .pricing-card .price { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 700; color: var(--charcoal); margin: 12px 0 4px; }
+  .pricing-card .price-note { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  .pricing-card ul { list-style: none; }
+  .pricing-card li { font-size: 14px; color: var(--muted); padding: 6px 0; border-bottom: 1px solid var(--card-border); display: flex; align-items: center; gap: 8px; }
+  .pricing-card li:last-child { border: none; }
+  .pricing-card li::before { content: '✓'; color: var(--green); font-weight: 700; }
+
+  /* APP */
+  #app { display: none; max-width: 720px; margin: 0 auto; padding: 32px 24px 80px; }
+
+  /* PROGRESS */
+  .progress-wrap { margin-bottom: 32px; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+  .progress-label strong { color: var(--charcoal); }
+  .progress-bar { height: 4px; background: var(--green-border); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--green); border-radius: 2px; transition: width 0.4s ease; }
+
+  /* STEP CARD */
+  .step-card { background: var(--card); border: 1px solid var(--card-border); border-radius: 16px; padding: 36px; }
+  .step-title { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: var(--charcoal); margin-bottom: 28px; }
+
+  /* FORM ELEMENTS */
+  .field { margin-bottom: 22px; }
+  .field label { display: block; font-size: 14px; font-weight: 500; color: var(--charcoal); margin-bottom: 7px; }
+  .field label span { color: var(--error); }
+  .field input, .field textarea, .field select { width: 100%; padding: 10px 14px; border: 1px solid var(--card-border); border-radius: 8px; font-size: 14px; font-family: 'DM Sans', sans-serif; color: var(--charcoal); background: white; outline: none; transition: border-color 0.2s; }
+  .field input:focus, .field textarea:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(45,90,61,0.1); }
+  .field textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+  .field .hint { font-size: 12px; color: var(--muted); margin-top: 5px; }
+  .field .error-msg { font-size: 12px; color: var(--error); margin-top: 5px; display: none; }
+  .field.has-error input, .field.has-error textarea { border-color: var(--error); }
+  .field.has-error .error-msg { display: block; }
+
+  /* TOGGLE BUTTONS */
+  .toggle-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .toggle-btn { padding: 8px 16px; border: 1px solid var(--card-border); border-radius: 8px; background: white; color: var(--charcoal); font-size: 14px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+  .toggle-btn:hover { border-color: var(--green); background: var(--green-light); }
+  .toggle-btn.active { background: var(--green); color: white; border-color: var(--green); }
+
+  /* DISPOSITION OPTIONS */
+  .disposition-list { display: flex; flex-direction: column; gap: 8px; }
+  .disposition-btn { padding: 12px 16px; border: 1px solid var(--card-border); border-radius: 8px; background: white; color: var(--charcoal); font-size: 14px; cursor: pointer; font-family: 'DM Sans', sans-serif; text-align: left; transition: all 0.15s; line-height: 1.4; }
+  .disposition-btn:hover { border-color: var(--green); background: var(--green-light); }
+  .disposition-btn.active { background: var(--green); color: white; border-color: var(--green); }
+
+  /* RATING */
+  .rating-row { display: flex; gap: 8px; }
+  .rating-btn { flex: 1; padding: 12px 8px; border: 1px solid var(--card-border); border-radius: 8px; background: white; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; text-align: center; transition: all 0.15s; }
+  .rating-btn:hover { border-color: var(--green); background: var(--green-light); }
+  .rating-btn.active { background: var(--green); color: white; border-color: var(--green); }
+  .rating-label { font-size: 11px; font-weight: 400; display: block; margin-top: 3px; opacity: 0.8; }
+
+  /* OBJECTIVES / ACHIEVEMENTS */
+  .repeatable-item { background: var(--green-light); border: 1px solid var(--green-border); border-radius: 10px; padding: 16px; margin-bottom: 12px; position: relative; }
+  .repeatable-item .remove-btn { position: absolute; top: 12px; right: 12px; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; line-height: 1; }
+  .repeatable-item .remove-btn:hover { color: var(--error); }
+  .add-btn { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1px dashed var(--green-border); border-radius: 8px; background: white; color: var(--green); font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; margin-top: 4px; }
+  .add-btn:hover { background: var(--green-light); }
+
+  /* CHECKBOXES */
+  .checkbox-group { display: flex; flex-direction: column; gap: 8px; }
+  .checkbox-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border: 1px solid var(--card-border); border-radius: 8px; background: white; cursor: pointer; }
+  .checkbox-item:hover { border-color: var(--green); background: var(--green-light); }
+  .checkbox-item input[type="checkbox"] { margin-top: 2px; accent-color: var(--green); width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
+  .checkbox-item .cb-text strong { display: block; font-size: 14px; color: var(--charcoal); }
+  .checkbox-item .cb-text span { font-size: 13px; color: var(--muted); }
+  .checkbox-detail { margin-top: 6px; padding: 8px 12px; border: 1px solid var(--green-border); border-radius: 6px; font-size: 13px; width: 100%; font-family: 'DM Sans', sans-serif; }
+  .show-more-btn { background: none; border: none; color: var(--green); font-size: 13px; cursor: pointer; padding: 8px 0; font-family: 'DM Sans', sans-serif; display: flex; align-items: center; gap: 4px; }
+
+  /* SUMMARY */
+  .summary-table { border: 1px solid var(--card-border); border-radius: 10px; overflow: hidden; }
+  .summary-row { display: flex; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--card-border); font-size: 14px; }
+  .summary-row:last-child { border: none; }
+  .summary-row .s-label { font-weight: 500; color: var(--charcoal); min-width: 160px; flex-shrink: 0; }
+  .summary-row .s-value { color: var(--muted); }
+
+  /* STEP NAV */
+  .step-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 28px; }
+
+  /* LOADING */
+  #loadingScreen { display: none; position: fixed; inset: 0; background: white; z-index: 200; flex-direction: column; align-items: center; justify-content: center; gap: 24px; }
+  #loadingScreen h2 { font-family: 'Playfair Display', serif; font-size: 28px; color: var(--charcoal); }
+  #loadingScreen p { color: var(--muted); font-size: 16px; }
+  .dots { display: flex; gap: 8px; }
+  .dot { width: 10px; height: 10px; background: var(--green); border-radius: 50%; animation: bounce 1.2s infinite; }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-12px); } }
+
+  /* REVIEW OUTPUT */
+  #outputSection { display: none; max-width: 720px; margin: 0 auto; padding: 32px 24px 80px; }
+  .output-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+  .review-text-area { width: 100%; padding: 24px; border: 1px solid var(--card-border); border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 15px; line-height: 1.8; color: var(--charcoal); background: white; min-height: 400px; resize: vertical; outline: none; }
+  .review-text-area:focus { border-color: var(--green); }
+
+  /* VALIDATION NOTE */
+  .validation-card { background: var(--amber-bg); border: 1px solid var(--amber-border); border-radius: 12px; padding: 24px 28px; margin-top: 24px; }
+  .validation-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .validation-header h3 { font-size: 15px; font-weight: 600; color: var(--amber); }
+  .validation-body { font-size: 14px; color: #78350f; line-height: 1.7; white-space: pre-line; }
+
+  /* HISTORY */
+  #historyPanel { display: none; position: fixed; top: 60px; right: 0; width: 380px; height: calc(100vh - 60px); background: white; border-left: 1px solid var(--card-border); z-index: 90; overflow-y: auto; padding: 24px; box-shadow: -4px 0 16px rgba(0,0,0,0.08); }
+  .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .history-header h3 { font-family: 'Playfair Display', serif; font-size: 20px; }
+  .history-search { width: 100%; padding: 9px 14px; border: 1px solid var(--card-border); border-radius: 8px; font-size: 14px; font-family: 'DM Sans', sans-serif; margin-bottom: 16px; outline: none; }
+  .history-search:focus { border-color: var(--green); }
+  .history-card { border: 1px solid var(--card-border); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; cursor: pointer; transition: border-color 0.15s; }
+  .history-card:hover { border-color: var(--green); background: var(--green-light); }
+  .history-card .hc-name { font-weight: 600; font-size: 14px; color: var(--charcoal); }
+  .history-card .hc-role { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+  .history-card .hc-meta { display: flex; align-items: center; gap: 8px; }
+  .rating-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; background: var(--green); color: white; border-radius: 12px; font-size: 12px; font-weight: 600; }
+  .hc-date { font-size: 12px; color: var(--muted); }
+  .hc-preview { font-size: 13px; color: var(--muted); margin-top: 8px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .empty-history { text-align: center; color: var(--muted); padding: 40px 0; font-size: 14px; }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 300; align-items: center; justify-content: center; padding: 24px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: white; border-radius: 16px; padding: 32px; max-width: 680px; width: 100%; max-height: 80vh; overflow-y: auto; }
+  .modal h3 { font-family: 'Playfair Display', serif; font-size: 22px; margin-bottom: 16px; }
+  .modal p { font-size: 15px; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+  .modal-review-text { font-size: 14px; line-height: 1.8; color: var(--charcoal); white-space: pre-line; }
+
+  /* DRAFT BANNER */
+  #draftBanner { display: none; background: var(--green-light); border-bottom: 1px solid var(--green-border); padding: 10px 24px; display: none; align-items: center; justify-content: space-between; }
+  #draftBanner p { font-size: 14px; color: var(--green); font-weight: 500; }
+  #draftBanner .draft-actions { display: flex; gap: 8px; }
+
+  @media (max-width: 600px) {
+    .pricing-grid { grid-template-columns: 1fr; }
+    .step-card { padding: 24px 20px; }
+    .rating-btn .rating-label { display: none; }
+    #historyPanel { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo" onclick="showLanding()">
+    <div class="logo-icon">RR</div>
+    ReviewRight
+  </div>
+  <div class="header-right">
+    <span class="review-count" id="reviewCountBadge">0 reviews generated</span>
+    <button class="btn-outline" onclick="toggleHistory()">History</button>
+    <button class="btn-outline" onclick="showGuide()">Guide</button>
+    <button class="btn-primary" onclick="startApp()" id="mainCTA">Start Writing</button>
+  </div>
+</header>
+
+<!-- API KEY BANNER -->
+<div id="apiKeyBanner">
+  <span class="banner-text">🔑 Enter your Anthropic API key to generate reviews</span>
+  <input type="password" id="apiKeyInput" placeholder="sk-ant-..." />
+  <button class="btn-save" onclick="saveApiKey()">Save Key</button>
+</div>
+
+<!-- DRAFT BANNER -->
+<div id="draftBanner">
+  <p>📝 You have a review in progress.</p>
+  <div class="draft-actions">
+    <button class="btn-outline" onclick="loadDraft()">Continue</button>
+    <button class="btn-outline" onclick="clearDraft()">Start Fresh</button>
+  </div>
+</div>
+
+<!-- LANDING PAGE -->
+<div id="landing">
+  <div class="hero">
+    <div class="trust-badge">✓ Built by an HR practitioner across five APAC markets.</div>
+    <h1>Performance reviews that are<br><span>fair, evidenced, and ready</span><br>to submit with confidence.</h1>
+    <p>ReviewRight guides managers through every step — so reviews reflect actual performance, not just how well someone writes under pressure.</p>
+    <div class="hero-cta">
+      <button class="btn-hero" onclick="startApp()">Start Writing Better Reviews</button>
+      <span class="hero-note" id="heroCount">Join managers already using ReviewRight</span>
+    </div>
+  </div>
+
+  <div class="objection">
+    <div class="objection-card">
+      <h3>Why not just use ChatGPT?</h3>
+      <p>Performance reviews are one of the most consequential things a manager does — and most organisations leave them entirely to chance. ReviewRight changes that. Built by an HR practitioner across five APAC markets, it guides managers through a structured, evidence-based process that produces reviews which are fair to the employee, defensible to HR, and ready to submit with confidence. Not a writing tool. A thinking tool.</p>
+    </div>
+  </div>
+
+  <div class="features">
+    <h2>Built differently, by design.</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">⚖️</div>
+        <h4>Legally Defensible by Design</h4>
+        <p>Every review is calibrated to the rating, behaviour-based, and gender neutral. Built to withstand scrutiny, not create it.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🧠</div>
+        <h4>Institutional Memory Built In</h4>
+        <p>ReviewRight tracks previous reviews and surfaces patterns — growth, stagnation, rating shifts — so nothing falls through the cracks.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h4>Private Manager Checklist</h4>
+        <p>Every generated review comes with a frank, private checklist of what's strong, what's weak, and what needs fixing before you submit.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="pricing">
+    <h2>Simple pricing.</h2>
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <div style="font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)">Free</div>
+        <div class="price">$0</div>
+        <div class="price-note">3 reviews to get started</div>
+        <ul>
+          <li>3 review generations</li>
+          <li>All 4 form steps</li>
+          <li>Manager checklist</li>
+          <li>Review history</li>
+        </ul>
+      </div>
+      <div class="pricing-card featured">
+        <div style="font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--green)">Individual Pro</div>
+        <div class="price">SGD $19</div>
+        <div class="price-note">per month</div>
+        <ul>
+          <li>Unlimited generations</li>
+          <li>All 4 form steps</li>
+          <li>Manager checklist</li>
+          <li>Full review history</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span>Step <strong id="stepNum">1</strong> of 4 — <strong id="stepName">Employee Details</strong></span>
+      <span id="stepPct">25%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:25%"></div></div>
+  </div>
+  <div id="stepContainer"></div>
+</div>
+
+<!-- OUTPUT -->
+<div id="outputSection">
+  <h2 style="font-family:'Playfair Display',serif;font-size:28px;margin-bottom:20px;">Generated Review</h2>
+  <div class="output-actions">
+    <button class="btn-primary" onclick="copyReview()">Copy to Clipboard</button>
+    <button class="btn-outline" onclick="regenerate()">Regenerate</button>
+    <button class="btn-outline" onclick="editInputs()">Edit Inputs</button>
+    <button class="btn-outline" onclick="startFreshConfirm()">Start Fresh</button>
+  </div>
+  <textarea class="review-text-area" id="reviewOutput" rows="20"></textarea>
+  <div class="validation-card" id="validationCard">
+    <div class="validation-header">
+      <span>🔒</span>
+      <h3>Private · Manager Checklist Only</h3>
+    </div>
+    <div class="validation-body" id="validationOutput"></div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div id="loadingScreen">
+  <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+  <h2>Writing something worth submitting.</h2>
+  <p>Calibrating to the rating and evidence provided...</p>
+</div>
+
+<!-- HISTORY PANEL -->
+<div id="historyPanel">
+  <div class="history-header">
+    <h3>Review History</h3>
+    <button class="btn-outline" onclick="toggleHistory()" style="padding:5px 12px;">Close</button>
+  </div>
+  <input class="history-search" id="historySearch" placeholder="Search by name or role..." oninput="renderHistory()" />
+  <div id="historyList"></div>
+</div>
+
+<!-- VIEW REVIEW MODAL -->
+<div class="modal-overlay" id="viewModal">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+      <div>
+        <h3 id="modalEmpName">Employee Review</h3>
+        <p style="margin:0;font-size:14px;" id="modalMeta"></p>
+      </div>
+      <button class="btn-outline" onclick="closeModal('viewModal')" style="padding:5px 12px;flex-shrink:0;">Close</button>
+    </div>
+    <div class="modal-review-text" id="modalReviewText"></div>
+  </div>
+</div>
+
+<!-- START FRESH MODAL -->
+<div class="modal-overlay" id="freshModal">
+  <div class="modal" style="max-width:420px;">
+    <h3>Start fresh?</h3>
+    <p>This will clear all current inputs and the generated review. This cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeModal('freshModal')">No, keep it</button>
+      <button class="btn-primary" onclick="doStartFresh()">Yes, start fresh</button>
+    </div>
+  </div>
+</div>
+
+<!-- GUIDE MODAL -->
+<div class="modal-overlay" id="guideModal">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3>How to use ReviewRight</h3>
+      <button class="btn-outline" onclick="closeModal('guideModal')" style="padding:5px 12px;">Close</button>
+    </div>
+    <p><strong>Step 1 — Employee Details:</strong> Enter the employee's role, time in position, and current engagement profile. This calibrates the tone of the review.</p>
+    <p><strong>Step 2 — Rating & Objectives:</strong> Select the performance rating and list formal objectives with met/not met status.</p>
+    <p><strong>Step 3 — Achievements & Development:</strong> Add specific, evidenced achievements and development areas. More detail = stronger review.</p>
+    <p><strong>Step 4 — Context & Generate:</strong> Flag any contextual factors (leave, personal circumstances), promotion consideration, and next period expectations.</p>
+    <p><strong>Manager Checklist:</strong> After generation, you receive a private checklist flagging what's strong, what's weak, and what needs fixing before submission.</p>
+    <p style="margin:0;font-size:13px;color:var(--muted);">Reviews are generated using AI and should be reviewed by the manager before submission.</p>
+  </div>
+</div>
+
+<script>
+// ============ STATE ============
+const RATINGS = ['','Not Meeting Expectations','Needs Improvement','Meeting Expectations','Strong Performer','Exceeds Expectations'];
+const STEPS = ['Employee Details','Rating & Objectives','Achievements & Development','Context & Generate'];
+const FREE_LIMIT = 3;
+const DRAFT_KEY = 'rr_draft';
+const HISTORY_KEY = 'rr_history';
+const COUNT_KEY = 'rr_count';
+const API_KEY_STORE = 'rr_apikey';
+
+let currentStep = 1;
+let formData = getDefaultForm();
+let lastSubmitted = null;
+
+function getDefaultForm() {
+  return {
+    employeeName: '', jobTitle: '', timeInRole: '', roleType: '',
+    directReports: '', disposition: '', rating: 0,
+    hasObjectives: null, objectives: [],
+    jobDescription: '',
+    achievements: [{ title: '', example: '' }],
+    development: [{ title: '', example: '', discussed: '' }],
+    contextFactors: [], promotionConsideration: '',
+    nextPeriodExpectations: ''
+  };
+}
+
+// ============ INIT ============
+window.onload = () => {
+  updateCountBadge();
+  checkApiKey();
+  checkDraft();
+};
+
+function checkApiKey() {
+  const key = localStorage.getItem(API_KEY_STORE);
+  if (key) document.getElementById('apiKeyBanner').style.display = 'none';
+}
+
+function saveApiKey() {
+  const val = document.getElementById('apiKeyInput').value.trim();
+  if (!val.startsWith('sk-ant-')) { alert('That doesn\'t look right. Your key should start with sk-ant-'); return; }
+  localStorage.setItem(API_KEY_STORE, val);
+  document.getElementById('apiKeyBanner').style.display = 'none';
+}
+
+function getApiKey() { return localStorage.getItem(API_KEY_STORE); }
+
+function getCount() { return parseInt(localStorage.getItem(COUNT_KEY) || '0'); }
+function incCount() { localStorage.setItem(COUNT_KEY, getCount() + 1); updateCountBadge(); }
+function updateCountBadge() {
+  const c = getCount();
+  document.getElementById('reviewCountBadge').textContent = c + ' review' + (c !== 1 ? 's' : '') + ' generated';
+  document.getElementById('heroCount').textContent = c > 0 ? c + ' reviews generated so far' : 'Join managers already using ReviewRight';
+}
+
+function checkDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return;
+    const { data, ts } = JSON.parse(raw);
+    if (Date.now() - ts > 48 * 3600 * 1000) { localStorage.removeItem(DRAFT_KEY); return; }
+    const banner = document.getElementById('draftBanner');
+    banner.style.display = 'flex';
+    window._pendingDraft = data;
+  } catch(e) {}
+}
+
+function loadDraft() {
+  if (window._pendingDraft) {
+    formData = window._pendingDraft;
+    document.getElementById('draftBanner').style.display = 'none';
+    showApp(1);
+  }
+}
+
+function clearDraft() {
+  localStorage.removeItem(DRAFT_KEY);
+  document.getElementById('draftBanner').style.display = 'none';
+}
+
+function saveDraft() {
+  localStorage.setItem(DRAFT_KEY, JSON.stringify({ data: formData, ts: Date.now() }));
+}
+
+// ============ NAV ============
+function showLanding() {
+  document.getElementById('landing').style.display = 'block';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('outputSection').style.display = 'none';
+}
+
+function startApp() {
+  formData = getDefaultForm();
+  showApp(1);
+}
+
+function showApp(step) {
+  currentStep = step;
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('outputSection').style.display = 'none';
+  renderStep();
+}
+
+function editInputs() {
+  showApp(currentStep || 4);
+}
+
+// ============ STEP RENDER ============
+function renderStep() {
+  const names = STEPS;
+  const pct = Math.round((currentStep / 4) * 100);
+  document.getElementById('stepNum').textContent = currentStep;
+  document.getElementById('stepName').textContent = names[currentStep - 1];
+  document.getElementById('stepPct').textContent = pct + '%';
+  document.getElementById('progressFill').style.width = pct + '%';
+
+  const container = document.getElementById('stepContainer');
+  if (currentStep === 1) container.innerHTML = renderStep1();
+  else if (currentStep === 2) container.innerHTML = renderStep2();
+  else if (currentStep === 3) container.innerHTML = renderStep3();
+  else if (currentStep === 4) container.innerHTML = renderStep4();
+
+  attachStepHandlers();
+  window.scrollTo(0, 0);
+}
+
+function renderStep1() {
+  const d = formData;
+  return `<div class="step-card">
+    <div class="step-title">Employee Details</div>
+    <div class="field">
+      <label>Employee Name</label>
+      <input type="text" id="f_employeeName" placeholder="Full name (optional)" value="${esc(d.employeeName)}" />
+    </div>
+    <div class="field" id="fld_jobTitle">
+      <label>Job Title & Role <span>*</span></label>
+      <input type="text" id="f_jobTitle" placeholder="e.g. Senior Product Manager" value="${esc(d.jobTitle)}" />
+      <span class="error-msg">Job title is required.</span>
+    </div>
+    <div class="field" id="fld_timeInRole">
+      <label>Time in Current Role <span>*</span></label>
+      <input type="text" id="f_timeInRole" placeholder="e.g. 18 months" value="${esc(d.timeInRole)}" />
+      <span class="error-msg">Time in role is required.</span>
+    </div>
+    <div class="field" id="fld_roleType">
+      <label>Role Type <span>*</span></label>
+      <div class="toggle-group">
+        <button class="toggle-btn${d.roleType==='individual_contributor'?' active':''}" data-val="individual_contributor" onclick="setToggle('roleType',this)">Individual Contributor</button>
+        <button class="toggle-btn${d.roleType==='people_manager'?' active':''}" data-val="people_manager" onclick="setToggle('roleType',this)">People Manager</button>
+      </div>
+      <span class="error-msg" id="err_roleType">Please select a role type.</span>
+    </div>
+    <div class="field" id="fld_directReports" style="display:${d.roleType==='people_manager'?'block':'none'}">
+      <label>Number of Direct Reports <span>*</span></label>
+      <input type="number" id="f_directReports" placeholder="e.g. 6" value="${esc(d.directReports)}" min="1" />
+      <span class="error-msg">Number of direct reports is required.</span>
+    </div>
+    <div class="field" id="fld_disposition">
+      <label>How would you describe ${d.employeeName||"this employee"}'s current engagement and ambition? <span>*</span></label>
+      <div class="disposition-list">
+        ${[
+          ['highly_ambitious','Highly ambitious — Actively seeking growth and promotion.'],
+          ['consistently_solid','Consistently solid — Reliable and stable, not seeking change.'],
+          ['showing_potential','Showing potential — Early career or recently promoted, still developing.'],
+          ['disengaged','Disengaged or coasting — Present but not contributing at full capacity.'],
+          ['at_risk','At risk — Performance or attitude concerns exist.']
+        ].map(([val,label]) => `<button class="disposition-btn${d.disposition===val?' active':''}" data-val="${val}" onclick="setToggle('disposition',this)">${label}</button>`).join('')}
+      </div>
+      <span class="error-msg" id="err_disposition">Please select an engagement and ambition profile.</span>
+    </div>
+    <div class="step-nav">
+      <span></span>
+      <button class="btn-primary" onclick="nextStep()">Next →</button>
+    </div>
+  </div>`;
+}
+
+function renderStep2() {
+  const d = formData;
+  const ratingLabels = ['','Not Meeting','Needs Improvement','Meeting','Strong','Exceeds'];
+  return `<div class="step-card">
+    <div class="step-title">Rating & Objectives</div>
+    <div class="field" id="fld_rating">
+      <label>Performance Rating <span>*</span></label>
+      <div class="rating-row">
+        ${[1,2,3,4,5].map(n=>`<button class="rating-btn${d.rating===n?' active':''}" onclick="setRating(${n})">
+          ${n}<span class="rating-label">${ratingLabels[n]}</span>
+        </button>`).join('')}
+      </div>
+      <span class="error-msg" id="err_rating">Select a rating to continue.</span>
+    </div>
+    <div class="field" id="fld_hasObjectives">
+      <label>Were formal objectives set for ${d.employeeName||'this employee'} this review period? <span>*</span></label>
+      <div class="toggle-group">
+        <button class="toggle-btn${d.hasObjectives===true?' active':''}" onclick="setObjectivesToggle(true)">Yes</button>
+        <button class="toggle-btn${d.hasObjectives===false?' active':''}" onclick="setObjectivesToggle(false)">No</button>
+      </div>
+      <span class="error-msg" id="err_hasObjectives">Please indicate whether formal objectives were set.</span>
+    </div>
+    <div id="objectivesSection" style="display:${d.hasObjectives===true?'block':'none'}">
+      <div id="objectivesList">
+        ${d.objectives.map((o,i)=>renderObjectiveItem(o,i)).join('')}
+      </div>
+      ${d.objectives.length < 5 ? `<button class="add-btn" onclick="addObjective()">+ Add Objective</button>` : ''}
+    </div>
+    <div class="field">
+      <label>Job Description</label>
+      <textarea id="f_jobDescription" placeholder="Paste the employee's job description here..." rows="5">${esc(d.jobDescription)}</textarea>
+      <div class="hint">Strongly recommended. Used to calibrate the review to actual role expectations.</div>
+    </div>
+    <div class="step-nav">
+      <button class="btn-outline" onclick="prevStep()">← Back</button>
+      <button class="btn-primary" onclick="nextStep()">Next →</button>
+    </div>
+  </div>`;
+}
+
+function renderObjectiveItem(o, i) {
+  return `<div class="repeatable-item" id="obj_${i}">
+    ${i > 0 ? `<button class="remove-btn" onclick="removeObjective(${i})">×</button>` : ''}
+    <div class="field">
+      <label>Objective ${i+1}</label>
+      <input type="text" placeholder="Describe the objective" value="${esc(o.title)}" onchange="updateObjective(${i},'title',this.value)" />
+    </div>
+    <div class="toggle-group">
+      <button class="toggle-btn${o.met===true?' active':''}" onclick="updateObjectiveMet(${i},true)">✓ Met</button>
+      <button class="toggle-btn${o.met===false?' active':''}" onclick="updateObjectiveMet(${i},false)">✗ Not Met</button>
+    </div>
+  </div>`;
+}
+
+function renderStep3() {
+  const d = formData;
+  return `<div class="step-card">
+    <div class="step-title">Achievements & Development</div>
+    <div class="field">
+      <label>Key Achievements <span>*</span></label>
+      <div class="hint" style="margin-bottom:12px;">More specific examples produce stronger, more defensible reviews. Aim for at least 3.</div>
+      <div id="achievementsList">
+        ${d.achievements.map((a,i)=>renderAchievementItem(a,i)).join('')}
+      </div>
+      ${d.achievements.length < 5 ? `<button class="add-btn" onclick="addAchievement()">+ Add Achievement</button>` : ''}
+    </div>
+    <div class="field" style="margin-top:28px;">
+      <label>Development Areas <span>*</span></label>
+      <div id="developmentList">
+        ${d.development.map((dev,i)=>renderDevelopmentItem(dev,i)).join('')}
+      </div>
+      ${d.development.length < 4 ? `<button class="add-btn" onclick="addDevelopment()">+ Add Development Area</button>` : ''}
+    </div>
+    <div class="step-nav">
+      <button class="btn-outline" onclick="prevStep()">← Back</button>
+      <button class="btn-primary" onclick="nextStep()">Next →</button>
+    </div>
+  </div>`;
+}
+
+function renderAchievementItem(a, i) {
+  return `<div class="repeatable-item" id="ach_${i}">
+    ${i > 0 ? `<button class="remove-btn" onclick="removeAchievement(${i})">×</button>` : ''}
+    <div class="field">
+      <label>Achievement ${i+1}${i===0?' *':''}</label>
+      <input type="text" placeholder="e.g. Reduced attrition in the team" value="${esc(a.title)}" onchange="updateAchievement(${i},'title',this.value)" />
+    </div>
+    <div class="field">
+      <label>Specific Example${i===0?' *':''}</label>
+      <textarea placeholder="What specifically did they do? What was the outcome or impact?" rows="3" onchange="updateAchievement(${i},'example',this.value)">${esc(a.example)}</textarea>
+    </div>
+  </div>`;
+}
+
+function renderDevelopmentItem(dev, i) {
+  return `<div class="repeatable-item" id="dev_${i}">
+    ${i > 0 ? `<button class="remove-btn" onclick="removeDevelopment(${i})">×</button>` : ''}
+    <div class="field">
+      <label>Development Area ${i+1}${i===0?' *':''}</label>
+      <input type="text" placeholder="e.g. Stakeholder influence at senior level" value="${esc(dev.title)}" onchange="updateDevelopment(${i},'title',this.value)" />
+    </div>
+    <div class="field">
+      <label>Specific Example${i===0?' *':''}</label>
+      <textarea placeholder="What patterns have you observed? What evidence supports this?" rows="3" onchange="updateDevelopment(${i},'example',this.value)">${esc(dev.example)}</textarea>
+    </div>
+    <div class="field">
+      <label>Has this been discussed with the employee?</label>
+      <div class="toggle-group">
+        ${[['yes','Yes'],['no','No — Not yet discussed'],['not_recorded','Not recorded']].map(([val,label])=>
+          `<button class="toggle-btn${dev.discussed===val?' active':''}" onclick="updateDevelopment(${i},'discussed','${val}');this.parentNode.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">${label}</button>`
+        ).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+const ALL_CONTEXT_FACTORS = [
+  { val: 'bereavement', label: 'Bereavement', desc: 'Loss of a family member or close person.', detail: false },
+  { val: 'maternity', label: 'Maternity leave', desc: '', detail: 'months away' },
+  { val: 'longterm_sick', label: 'Long-term sickness or hospitalisation', desc: '', detail: 'approximate duration' },
+  { val: 'paternity', label: 'Paternity leave', desc: '', detail: 'months away', hidden: true },
+  { val: 'miscarriage', label: 'Miscarriage or pregnancy loss', desc: '', detail: false, hidden: true },
+  { val: 'mental_health', label: 'Mental health related absence', desc: '', detail: 'approximate duration', hidden: true },
+  { val: 'personal_crisis', label: 'Significant personal crisis', desc: '', detail: false, hidden: true },
+  { val: 'restructure', label: 'Restructure or role change mid-year', desc: '', detail: 'when', hidden: true },
+  { val: 'new_market', label: 'New market or territory taken on mid-year', desc: '', detail: false, hidden: true },
+  { val: 'difficult_client', label: 'Exceptionally difficult client or project', desc: '', detail: 'describe', hidden: true },
+  { val: 'understaffing', label: 'Team understaffing or resource gaps', desc: '', detail: false, hidden: true },
+  { val: 'none', label: 'None of the above', desc: '', detail: false },
+];
+
+function renderStep4() {
+  const d = formData;
+  const showMore = window._showMoreContext || false;
+  const visible = ALL_CONTEXT_FACTORS.filter(f => !f.hidden || showMore);
+  return `<div class="step-card">
+    <div class="step-title">Context & Generate</div>
+
+    <div class="field">
+      <label>Contextual Factors This Period</label>
+      <div class="hint" style="margin-bottom:12px;">Select anything that materially affected this employee's year.</div>
+      <div class="checkbox-group" id="contextGroup">
+        ${visible.map(f => {
+          const checked = d.contextFactors.find(c=>c.val===f.val);
+          return `<label class="checkbox-item">
+            <input type="checkbox" value="${f.val}" ${checked?'checked':''} onchange="toggleContext('${f.val}',this.checked)" />
+            <div class="cb-text">
+              <strong>${f.label}</strong>
+              ${f.desc?`<span>${f.desc}</span>`:''}
+              ${f.detail && checked ? `<br><input class="checkbox-detail" type="text" placeholder="${f.detail}" value="${esc(checked.detail||'')}" onchange="updateContextDetail('${f.val}',this.value)" />` : ''}
+            </div>
+          </label>`;
+        }).join('')}
+      </div>
+      ${!showMore ? `<button class="show-more-btn" onclick="window._showMoreContext=true;renderStep()">▾ Show more factors</button>` : `<button class="show-more-btn" onclick="window._showMoreContext=false;renderStep()">▴ Show fewer</button>`}
+    </div>
+
+    <div class="field">
+      <label>Promotion Consideration</label>
+      <div class="toggle-group">
+        ${[['promotion_yes','Yes — promotion to next level'],['stretch_yes','Yes — stretch role or expanded scope'],['no','No — remaining in current role']].map(([val,label])=>
+          `<button class="toggle-btn${d.promotionConsideration===val?' active':''}" data-val="${val}" onclick="setToggle('promotionConsideration',this)">${label}</button>`
+        ).join('')}
+      </div>
+    </div>
+
+    <div class="field" id="fld_nextPeriod">
+      <label>Next Review Period Expectations <span>*</span></label>
+      <textarea id="f_nextPeriod" rows="4" placeholder="e.g. Lead the new client onboarding workstream, improve stakeholder communication, develop two team members toward promotion...">${esc(d.nextPeriodExpectations)}</textarea>
+      <div class="hint">What are the top 2–3 expectations for the next review period?</div>
+      <span class="error-msg">Next period expectations are required.</span>
+    </div>
+
+    <div class="field">
+      <label>Review Summary</label>
+      <div class="summary-table">
+        <div class="summary-row"><span class="s-label">Employee</span><span class="s-value">${esc(d.employeeName)||'Not provided'}</span></div>
+        <div class="summary-row"><span class="s-label">Role</span><span class="s-value">${esc(d.jobTitle)}</span></div>
+        <div class="summary-row"><span class="s-label">Time in Role</span><span class="s-value">${esc(d.timeInRole)}</span></div>
+        <div class="summary-row"><span class="s-label">Rating</span><span class="s-value">${d.rating}/5 — ${RATINGS[d.rating]||'Not set'}</span></div>
+        <div class="summary-row"><span class="s-label">Objectives</span><span class="s-value">${d.hasObjectives?d.objectives.length+' set':'None set'}</span></div>
+        <div class="summary-row"><span class="s-label">Achievements</span><span class="s-value">${d.achievements.filter(a=>a.title).length} documented</span></div>
+        <div class="summary-row"><span class="s-label">Development Areas</span><span class="s-value">${d.development.filter(a=>a.title).length} documented</span></div>
+      </div>
+    </div>
+
+    <div class="step-nav">
+      <button class="btn-outline" onclick="prevStep()">← Back</button>
+      <button class="btn-primary" onclick="generateReview()" style="padding:12px 28px;font-size:15px;">✦ Generate Review</button>
+    </div>
+  </div>`;
+}
+
+// ============ FORM HANDLERS ============
+function attachStepHandlers() {
+  const fields = ['employeeName','jobTitle','timeInRole','directReports','jobDescription'];
+  fields.forEach(id => {
+    const el = document.getElementById('f_' + id);
+    if (el) el.addEventListener('input', () => { formData[id] = el.value; saveDraft(); });
+  });
+  const np = document.getElementById('f_nextPeriod');
+  if (np) np.addEventListener('input', () => { formData.nextPeriodExpectations = np.value; saveDraft(); });
+}
+
+function setToggle(field, btn) {
+  formData[field] = btn.dataset.val;
+  btn.closest('.toggle-group, .disposition-list').querySelectorAll('.toggle-btn, .disposition-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (field === 'roleType') {
+    const dr = document.getElementById('fld_directReports');
+    if (dr) dr.style.display = formData.roleType === 'people_manager' ? 'block' : 'none';
+  }
+  saveDraft();
+}
+
+function setRating(n) {
+  formData.rating = n;
+  document.querySelectorAll('.rating-btn').forEach((b,i) => b.classList.toggle('active', i+1===n));
+  saveDraft();
+}
+
+function setObjectivesToggle(val) {
+  formData.hasObjectives = val;
+  document.querySelectorAll('#fld_hasObjectives .toggle-btn').forEach((b,i) => b.classList.toggle('active', i===0?val:!val));
+  const sec = document.getElementById('objectivesSection');
+  if (sec) sec.style.display = val ? 'block' : 'none';
+  if (val && formData.objectives.length === 0) formData.objectives = [{ title: '', met: null }];
+  saveDraft();
+}
+
+function addObjective() {
+  if (formData.objectives.length >= 5) return;
+  formData.objectives.push({ title: '', met: null });
+  saveDraft(); renderStep();
+}
+function removeObjective(i) { formData.objectives.splice(i, 1); saveDraft(); renderStep(); }
+function updateObjective(i, key, val) { formData.objectives[i][key] = val; saveDraft(); }
+function updateObjectiveMet(i, val) {
+  formData.objectives[i].met = val;
+  const item = document.getElementById('obj_' + i);
+  if (item) item.querySelectorAll('.toggle-btn').forEach((b,j)=>b.classList.toggle('active',j===0?val:!val));
+  saveDraft();
+}
+
+function addAchievement() {
+  if (formData.achievements.length >= 5) return;
+  formData.achievements.push({ title: '', example: '' });
+  saveDraft(); renderStep();
+}
+function removeAchievement(i) { formData.achievements.splice(i, 1); saveDraft(); renderStep(); }
+function updateAchievement(i, key, val) { formData.achievements[i][key] = val; saveDraft(); }
+
+function addDevelopment() {
+  if (formData.development.length >= 4) return;
+  formData.development.push({ title: '', example: '', discussed: '' });
+  saveDraft(); renderStep();
+}
+function removeDevelopment(i) { formData.development.splice(i, 1); saveDraft(); renderStep(); }
+function updateDevelopment(i, key, val) { formData.development[i][key] = val; saveDraft(); }
+
+function toggleContext(val, checked) {
+  if (val === 'none') {
+    if (checked) formData.contextFactors = [{ val: 'none', detail: '' }];
+    else formData.contextFactors = [];
+  } else {
+    formData.contextFactors = formData.contextFactors.filter(c => c.val !== 'none');
+    if (checked) formData.contextFactors.push({ val, detail: '' });
+    else formData.contextFactors = formData.contextFactors.filter(c => c.val !== val);
+  }
+  saveDraft(); renderStep();
+}
+
+function updateContextDetail(val, detail) {
+  const f = formData.contextFactors.find(c => c.val === val);
+  if (f) f.detail = detail;
+  saveDraft();
+}
+
+// ============ VALIDATION ============
+function validateStep(step) {
+  let valid = true;
+  const show = (id, show) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('has-error', show);
+  };
+  if (step === 1) {
+    if (!formData.jobTitle.trim()) { show('fld_jobTitle', true); valid = false; } else show('fld_jobTitle', false);
+    if (!formData.timeInRole.trim()) { show('fld_timeInRole', true); valid = false; } else show('fld_timeInRole', false);
+    if (!formData.roleType) { document.getElementById('err_roleType').style.display = formData.roleType?'none':'block'; valid = false; } else document.getElementById('err_roleType').style.display = 'none';
+    if (formData.roleType === 'people_manager' && !formData.directReports) { show('fld_directReports', true); valid = false; } else show('fld_directReports', false);
+    if (!formData.disposition) { document.getElementById('err_disposition').style.display = 'block'; valid = false; } else document.getElementById('err_disposition').style.display = 'none';
+  }
+  if (step === 2) {
+    if (!formData.rating) { document.getElementById('err_rating').style.display = 'block'; valid = false; } else document.getElementById('err_rating').style.display = 'none';
+    if (formData.hasObjectives === null) { document.getElementById('err_hasObjectives').style.display = 'block'; valid = false; } else document.getElementById('err_hasObjectives').style.display = 'none';
+  }
+  if (step === 3) {
+    if (!formData.achievements[0].title.trim() || !formData.achievements[0].example.trim()) { alert('Please complete at least one achievement with a title and example.'); valid = false; }
+    else if (!formData.development[0].title.trim() || !formData.development[0].example.trim()) { alert('Please complete at least one development area with a title and example.'); valid = false; }
+  }
+  if (step === 4) {
+    const np = document.getElementById('f_nextPeriod');
+    const val = np ? np.value.trim() : formData.nextPeriodExpectations.trim();
+    if (!val) { show('fld_nextPeriod', true); valid = false; } else { show('fld_nextPeriod', false); formData.nextPeriodExpectations = val; }
+  }
+  return valid;
+}
+
+function nextStep() {
+  // Collect current field values
+  ['employeeName','jobTitle','timeInRole','directReports','jobDescription'].forEach(id => {
+    const el = document.getElementById('f_' + id);
+    if (el) formData[id] = el.value;
+  });
+  if (!validateStep(currentStep)) return;
+  if (currentStep < 4) showApp(currentStep + 1);
+}
+
+function prevStep() {
+  if (currentStep > 1) showApp(currentStep - 1);
+}
+
+// ============ GENERATE ============
+async function generateReview() {
+  const np = document.getElementById('f_nextPeriod');
+  if (np) formData.nextPeriodExpectations = np.value;
+  if (!validateStep(4)) return;
+
+  if (!getApiKey()) { alert('Please enter your Anthropic API key at the top of the page first.'); return; }
+  if (getCount() >= FREE_LIMIT) {
+    alert('You\'ve used your 3 free reviews. Please upgrade to continue generating reviews.');
+    return;
+  }
+
+  lastSubmitted = JSON.parse(JSON.stringify(formData));
+  const loading = document.getElementById('loadingScreen');
+  loading.style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+
+  try {
+    const [reviewText, validationText] = await Promise.all([
+      callAPI(buildReviewPrompt(formData)),
+      callAPI(buildValidationPrompt(formData))
+    ]);
+
+    const rec = buildRecommendation(formData);
+    const fullReview = reviewText + '\n\n---\n\nRECOMMENDATION\n' + rec;
+
+    incCount();
+    saveToHistory(formData, fullReview);
+    localStorage.removeItem(DRAFT_KEY);
+
+    loading.style.display = 'none';
+    document.getElementById('outputSection').style.display = 'block';
+    document.getElementById('reviewOutput').value = fullReview;
+    document.getElementById('validationOutput').textContent = validationText;
+    window.scrollTo(0, 0);
+
+  } catch(e) {
+    loading.style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    alert('Error generating review: ' + e.message + '\n\nPlease check your API key and try again.');
+  }
+}
+
+async function callAPI(prompt) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': getApiKey(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  if (!res.ok) { const err = await res.json(); throw new Error(err.error?.message || 'API error'); }
+  const data = await res.json();
+  return data.content[0].text;
+}
+
+function buildReviewPrompt(d) {
+  const name = d.employeeName || 'this employee';
+  const dispositionTone = {
+    highly_ambitious: 'Write with energy and forward momentum. Acknowledge drive and ambition directly.',
+    consistently_solid: 'Write with steadiness and appreciation for reliability. Avoid making solid performance sound underwhelming.',
+    showing_potential: 'Write with encouragement and developmental framing. Note early indicators of growth.',
+    disengaged: 'Write honestly but constructively. Do not sugar-coat the performance picture.',
+    at_risk: 'Write seriously and factually. This review must be clear and unambiguous.'
+  };
+  const ratingTone = {
+    1: 'This is a serious performance concern. The review must be unambiguous. Do not soften language to the point of obscuring severity.',
+    2: 'Performance is below expectations. Be direct without being harsh. Development areas must be named explicitly.',
+    3: 'Solid, reliable performance. Acknowledge what has been delivered. Avoid making this sound like a backhanded compliment.',
+    4: 'Strong performance year. Be specific and generous with the evidence. This employee has delivered well above average.',
+    5: 'Exceptional year. The review should reflect genuine excellence with specific evidence. This is rare — write accordingly.'
+  };
+  const objMet = d.objectives.filter(o=>o.met===true).map(o=>o.title);
+  const objNotMet = d.objectives.filter(o=>o.met===false).map(o=>o.title);
+  const contextLines = d.contextFactors.filter(c=>c.val!=='none').map(c=>{
+    const f = ALL_CONTEXT_FACTORS.find(x=>x.val===c.val);
+    return `- ${f?.label||c.val}${c.detail?` (${c.detail})`:''}`;
+  });
+
+  return `You are an expert HR performance review writer. Write a formal annual performance review for a manager to submit. The language must be factual, behavioural, gender neutral, and calibrated precisely to the rating. No corporate filler. No generic openers.
+
+BANNED PHRASES:
+- Never open with "${name} has demonstrated a commitment to excellence"
+- Never use "showcasing leadership qualities" or "committed to exceeding expectations"
+- Never use he, she, him, her, his, hers at any point
+- Never use vague language without naming specifics
+- Do not soften a 1 or 2 rating in a way that obscures the seriousness
+
+EMPLOYEE:
+- Name: ${name}
+- Job Title: ${d.jobTitle}
+- Time in Current Role: ${d.timeInRole}
+- Role Type: ${d.roleType === 'people_manager' ? `People Manager with ${d.directReports} direct reports` : 'Individual Contributor'}
+- Rating: ${d.rating}/5 — ${RATINGS[d.rating]}
+- Promotion Consideration: ${d.promotionConsideration || 'Not specified'}
+- Disposition: ${d.disposition}
+
+DISPOSITION TONE: ${dispositionTone[d.disposition] || ''}
+RATING CALIBRATION: ${ratingTone[d.rating] || ''}
+
+OBJECTIVES:
+${d.hasObjectives ? `Met: ${objMet.length ? objMet.join(', ') : 'None'}
+Not Met: ${objNotMet.length ? objNotMet.join(', ') : 'None'}` : 'No formal objectives were set for this review period.'}
+
+KEY ACHIEVEMENTS:
+${d.achievements.filter(a=>a.title).map((a,i)=>`${i+1}. ${a.title}\n   Evidence: ${a.example}`).join('\n')}
+
+DEVELOPMENT AREAS:
+${d.development.filter(a=>a.title).map((a,i)=>`${i+1}. ${a.title}\n   Evidence: ${a.example}\n   Previously discussed: ${a.discussed==='yes'?'Yes':a.discussed==='no'?'No — not yet discussed':'Not recorded'}`).join('\n')}
+
+${contextLines.length ? `CONTEXTUAL FACTORS:\n${contextLines.join('\n')}` : ''}
+
+EXPECTATIONS FOR NEXT PERIOD:
+${d.nextPeriodExpectations}
+
+${d.jobDescription ? `JOB DESCRIPTION:\n${d.jobDescription}` : 'NO JOB DESCRIPTION PROVIDED — use job title, role type, time in role, and achievement examples.'}
+
+VOCABULARY — ACTIVELY USE: demonstrated, delivered, drove, spearheaded, championed, enabled, accelerated, transformed, consistently, notably.
+NEVER USE: helped with, was involved in, assisted, participated in, was part of.
+
+OUTPUT FORMAT (flowing paragraphs only — no subheadings, no bullet points):
+1. OPENING PARAGRAPH (2–3 sentences, direct and specific)
+2. ACHIEVEMENTS (one paragraph per achievement)
+3. DEVELOPMENT (one paragraph per area)
+4. CLOSING (2–3 sentences based on next period expectations)
+
+TARGET: ${d.rating <= 2 ? '500–600 words' : '400–500 words'}`;
+}
+
+function buildValidationPrompt(d) {
+  const name = d.employeeName || 'this employee';
+  return `You are a senior HR business partner reviewing a manager's performance review inputs before they submit. Give a frank, private pre-submission checklist specific to ${name}. Written in natural paragraph form — not bullet points.
+
+EMPLOYEE: ${name}, ${d.jobTitle}, ${d.timeInRole}
+RATING: ${d.rating}/5 — ${RATINGS[d.rating]}
+ACHIEVEMENTS: ${d.achievements.filter(a=>a.title).map(a=>`${a.title}: ${a.example}`).join(' | ')}
+DEVELOPMENT AREAS: ${d.development.filter(a=>a.title).map(a=>`${a.title}: ${a.example} (discussed: ${a.discussed})`).join(' | ')}
+NEXT PERIOD: ${d.nextPeriodExpectations}
+${d.jobDescription ? `JOB DESCRIPTION PROVIDED: Yes` : 'NO JOB DESCRIPTION: Flag this if rating is 4 or 5.'}
+
+Write three sections in natural paragraph form:
+
+WHAT IS STRONG: Specific achievements or evidence that are well-documented.
+
+WHAT NEEDS STRENGTHENING: Be frank. Name any examples that are thin or vague. Flag unmet objectives if rating is 4 or 5.
+
+WHAT NEEDS FIXING BEFORE SUBMISSION: Flag any undiscussed development areas. Flag sensitive contextual factors needing HR documentation. Be specific.
+
+End with exactly: "A great performance review is never a surprise. If anything in this review would shock ${name}, revisit it before submitting."`;
+}
+
+function buildRecommendation(d) {
+  const r = d.rating, p = d.promotionConsideration, dis = d.disposition;
+  if (dis === 'disengaged' || dis === 'at_risk') {
+    if (r <= 2) return 'Urgent performance and engagement intervention required. A structured plan with clear timelines and consequences should be initiated immediately.';
+    return 'Engagement concerns require direct attention regardless of performance rating. A structured conversation and development plan is recommended before any promotion consideration.';
+  }
+  if (r === 5 && (p === 'promotion_yes' || p === 'stretch_yes')) return 'Strongly recommended for promotion to next level. Performance evidence this year clearly demonstrates readiness.';
+  if (r === 5) return 'Increment strongly recommended. Performance this year has been exceptional.';
+  if (r === 4 && p === 'promotion_yes') return 'Recommended for promotion with evidence of sustained strong performance.';
+  if (r === 4 && p === 'stretch_yes') return 'Recommended for stretch role or expanded scope.';
+  if (r === 4) return 'Increment recommended. Strong performance warrants recognition.';
+  if (r === 3 && p === 'stretch_yes' && dis === 'showing_potential') return 'Showing early indicators for stretch opportunity with targeted support.';
+  if (r === 3 && p === 'stretch_yes') return 'May be considered for stretch role with targeted development support.';
+  if (r === 3) return 'Retention focus recommended with a structured development plan.';
+  if (r === 2) return 'Performance improvement plan required regardless of promotion consideration.';
+  if (r === 1) return 'Urgent performance intervention required.';
+  return 'Discuss next steps with HR.';
+}
+
+// ============ OUTPUT ACTIONS ============
+function copyReview() {
+  const text = document.getElementById('reviewOutput').value;
+  navigator.clipboard.writeText(text).then(() => { alert('Copied to clipboard!'); });
+}
+
+async function regenerate() {
+  if (!lastSubmitted) return;
+  const loading = document.getElementById('loadingScreen');
+  loading.style.display = 'flex';
+  document.getElementById('outputSection').style.display = 'none';
+  try {
+    const [reviewText, validationText] = await Promise.all([
+      callAPI(buildReviewPrompt(lastSubmitted)),
+      callAPI(buildValidationPrompt(lastSubmitted))
+    ]);
+    const rec = buildRecommendation(lastSubmitted);
+    loading.style.display = 'none';
+    document.getElementById('outputSection').style.display = 'block';
+    document.getElementById('reviewOutput').value = reviewText + '\n\n---\n\nRECOMMENDATION\n' + rec;
+    document.getElementById('validationOutput').textContent = validationText;
+  } catch(e) {
+    loading.style.display = 'none';
+    document.getElementById('outputSection').style.display = 'block';
+    alert('Error: ' + e.message);
+  }
+}
+
+function startFreshConfirm() { document.getElementById('freshModal').classList.add('open'); }
+function doStartFresh() { closeModal('freshModal'); formData = getDefaultForm(); localStorage.removeItem(DRAFT_KEY); showLanding(); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ============ HISTORY ============
+function saveToHistory(d, reviewText) {
+  const history = getHistory();
+  const rec = {
+    id: Date.now(),
+    employeeName: d.employeeName || 'Unnamed',
+    jobTitle: d.jobTitle,
+    rating: d.rating,
+    reviewText,
+    reviewPreview: reviewText.split('\n')[0].substring(0, 120),
+    date: new Date().toLocaleDateString('en-SG', { day: 'numeric', month: 'short', year: 'numeric' }),
+    formData: d
+  };
+  history.unshift(rec);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 50)));
+}
+
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch { return []; }
+}
+
+function toggleHistory() {
+  const panel = document.getElementById('historyPanel');
+  const isOpen = panel.style.display === 'block';
+  panel.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) renderHistory();
+}
+
+function renderHistory() {
+  const query = document.getElementById('historySearch')?.value?.toLowerCase() || '';
+  const history = getHistory().filter(r =>
+    r.employeeName.toLowerCase().includes(query) || r.jobTitle.toLowerCase().includes(query)
+  );
+  const list = document.getElementById('historyList');
+  if (!list) return;
+  if (!history.length) { list.innerHTML = '<div class="empty-history">No reviews yet.<br>Generated reviews will appear here.</div>'; return; }
+  list.innerHTML = history.map(r => `
+    <div class="history-card" onclick="viewHistoryItem(${r.id})">
+      <div class="hc-name">${esc(r.employeeName)}</div>
+      <div class="hc-role">${esc(r.jobTitle)}</div>
+      <div class="hc-meta">
+        <span class="rating-badge">${r.rating}/5</span>
+        <span class="hc-date">${r.date}</span>
+      </div>
+      <div class="hc-preview">${esc(r.reviewPreview)}...</div>
+    </div>
+  `).join('');
+}
+
+function viewHistoryItem(id) {
+  const rec = getHistory().find(r => r.id === id);
+  if (!rec) return;
+  document.getElementById('modalEmpName').textContent = rec.employeeName;
+  document.getElementById('modalMeta').textContent = rec.jobTitle + ' · ' + rec.date + ' · Rating: ' + rec.rating + '/5';
+  document.getElementById('modalReviewText').textContent = rec.reviewText;
+  document.getElementById('viewModal').classList.add('open');
+}
+
+function showGuide() { document.getElementById('guideModal').classList.add('open'); }
+
+// ============ UTILS ============
+function esc(str) { return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+</script>
+</body>
+</html>
